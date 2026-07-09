@@ -1,10 +1,12 @@
-import customtkinter as ctk
 import tkinter.messagebox as messagebox
-import pandas as pd
-from model import DementiaPredictionModel
+
+import customtkinter as ctk
+
+from model import INPUT_COLUMNS, load_or_train_model
+
 
 class DementiaPredictionGUI:
-    def __init__(self, root):
+    def __init__(self, root, model=None):
         self.root = root
         self.root.title("Dementia Prediction System")
         self.root.geometry("1000x900")  # Increased width further for larger elements
@@ -22,13 +24,17 @@ class DementiaPredictionGUI:
             'text': '#2C3E50'         # Dark blue-gray
         }
         
-        # Initialize the model
-        self.model = DementiaPredictionModel()
-        try:
-            self.model.train('data.csv')
-            print("Model trained successfully")
-        except Exception as e:
-            messagebox.showerror("Error", f"Error training model: {str(e)}")
+        # Initialize the model (loads a cached model from disk if available,
+        # otherwise trains a fresh one and caches it for next launch)
+        if model is not None:
+            self.model = model
+        else:
+            try:
+                self.model = load_or_train_model()
+                print("Model ready")
+            except Exception as e:
+                messagebox.showerror("Error", f"Error preparing model: {str(e)}")
+                raise
         
         self.create_widgets()
     
@@ -103,11 +109,6 @@ class DementiaPredictionGUI:
                 ('Cognitive_Test_Scores', ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10']),
                 ('Depression_Status', ['Yes', 'No']),
                 ('MRI_Delay', None)
-            ],
-            "💊 Medication": [
-                ('Prescription', ['Galantamine', 'Memantine', 'Rivastigmine', 'Donepezil', 'None']),
-                ('Dosage in mg', None),
-                ('Medication_History', ['Yes', 'No'])
             ]
         }
         
@@ -238,17 +239,9 @@ class DementiaPredictionGUI:
             # Add animation effect
             self.root.config(cursor="wait")
             
-            # Gather all inputs
+            # Gather all inputs, in the same order the model expects
             input_values = []
-            for field in [
-                'Diabetic', 'AlcoholLevel', 'HeartRate', 'BloodOxygenLevel', 
-                'BodyTemperature', 'Weight', 'MRI_Delay', 'Prescription', 
-                'Dosage in mg', 'Age', 'Dominant_Hand', 'Gender', 
-                'Family_History', 'Smoking_Status', 'APOE_ε4', 
-                'Physical_Activity', 'Depression_Status', 'Cognitive_Test_Scores', 
-                'Medication_History', 'Nutrition_Diet', 'Sleep_Quality', 
-                'Chronic_Health_Conditions'
-            ]:
+            for field in INPUT_COLUMNS:
                 value = self.inputs[field].get()
                 if value == '':
                     messagebox.showerror("Error", f"Please fill in the {field} field")
@@ -282,7 +275,7 @@ class DementiaPredictionGUI:
 
 def main():
     root = ctk.CTk()
-    app = DementiaPredictionGUI(root)
+    DementiaPredictionGUI(root)
     root.mainloop()
 
 if __name__ == "__main__":

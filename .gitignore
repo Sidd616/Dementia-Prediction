@@ -1,0 +1,22 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Trained model artifacts (regenerate via `python main.py` / `model.py`)
+*.joblib
+*.pkl
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Test/lint caches
+.pytest_cache/
+.ruff_cache/
